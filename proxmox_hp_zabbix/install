@@ -1,0 +1,59 @@
+#!/bin/bash
+
+ZABBIX_SERVER=zabbix.novatel.si
+
+
+echo "Installing sudo... "
+apt-get install -y sudo
+echo ""
+
+
+echo "Adding zabbix 2.0 agent repos..."
+echo "deb http://repo.guruhub.com.uy/debian/ squeeze main" >/etc/apt/sources.list.d/guruhub-squeeze.list
+wget -q -O - http://repo.guruhub.com.uy/guruhub.apt.gpg | sudo apt-key add -
+wget -q -O - http://repo.guruhub.com.uy/guruhub-scribe-client.apt.gpg   | apt-key add -
+echo ""
+
+echo "Adding HP Proliant Support pack repos..."
+echo "deb http://downloads.linux.hp.com/SDR/downloads/ProLiantSupportPack squeeze/current non-free" > /etc/apt/sources.list.d/HP-ProLiantSupportPack.list
+wget -q -O - http://downloads.linux.hp.com/SDR/downloads/ProLiantSupportPack/GPG-KEY-ProLiantSupportPack   | apt-key add -
+echo ""
+
+echo "Update local package database (apt-get update)"
+apt-get update
+echo ""
+
+
+echo "Installing packages... "
+apt-get install -y hpacucli
+apt-get install -y zabbix-agent
+echo ""
+
+
+echo "Adding zabbix sudoers command so it can monitor..."
+echo "" >> /etc/sudoers
+echo "zabbix ALL= NOPASSWD: /usr/sbin/hpacucli" >> /etc/sudoers
+echo ""
+
+
+echo "Enabling zabbix-agent on boot..."
+update-rc.d zabbix-agent defaults
+echo ""
+
+
+echo "Adding User parameter for HP Smart Array details..."
+echo "" >> /etc/zabbix/zabbix_agentd.conf
+echo "UserParameter=hpproliant.hpacucli.all.details, sudo hpacucli ctrl all show config detail | grep -Ev Tempera" >> /etc/zabbix/zabbix_agentd.conf
+echo ""
+
+
+echo "Configuring /etc/zabbix/zabbix_agentd.conf..."
+sed  -i "s/\(Server *= *\).*/\1$ZABBIX_SERVER/" /etc/zabbix/zabbix_agentd.conf
+echo ""
+
+echo "Restarting zabbix agent..."
+/etc/init.d/zabbix-agent restart
+echo ""
+
+
+
