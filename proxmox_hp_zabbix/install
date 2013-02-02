@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ZABBIX_SERVER=zabbix.novatel.si
+ZABBIX_SERVER=zabbix-server-ip-or-hostname
 
 
 echo "Installing sudo... "
